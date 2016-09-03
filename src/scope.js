@@ -17,6 +17,15 @@ function lookup(scope, key) {
   throw new Error('not a valid scope');
 }
 
+function assign(scope, key, value) {
+  if (scope[0] === 'Scope.Nonempty') {
+    scope[1][key] = value;
+  } else {
+    throw new Error('not a valid scope to assign to');
+  }
+}
+
+exports.assign = assign;
 exports.lookup = lookup;
 exports.create = create;
 exports.Empty = Empty;

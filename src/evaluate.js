@@ -1,7 +1,8 @@
 const Scope = require('./scope');
 
 const special = {
-  quote(staack, scope, node) {
+  quote(stack, scope, node) {
+    // Should be called like (quote foo) with exactly one argument.
     if (node.items.length !== 2) {
       throw new Error('bad quote syntax');
     }
@@ -16,15 +17,30 @@ const special = {
     const body = node.items.slice(2);
     return {type: 'Function', scope, parameters, body};
   },
+  if(stack, scope, node) {
+    const condition = node.items[1];
+    const trueBranch = node.items[2];
+    const falseBranch = node.items[3];
+    // The key to `if` is to only evaluate the right branch, not both of them.
+    const value = EVAL(stack, scope, condition);
+    if (value.type === 'False') {
+      return EVAL(stack, scope, falseBranch);
+    } else {
+      return EVAL(stack, scope, trueBranch);
+    }
+  },
   let(stack, scope, node) {
-    const obj = {};
+    // We need to actually mutate the scope as we evaluate let-bindings so that
+    // recursive functions can see themselves.
     const pairs = node.items[1];
+    const newScope = Scope.create(scope, {});
     pairs.items.forEach(p => {
       const name = p.items[0].name;
-      const value = EVAL(stack, scope, p.items[1]);
-      obj[name] = value;
+      const value = EVAL(stack, newScope, p.items[1]);
+      Scope.assign(newScope, name, value);
     });
-    const newScope = Scope.create(scope, obj);
+    // Evaluate one or more expressions after the let-bindings and return the
+    // last one. Useful for side effects.
     const values =
       node
         .items
@@ -40,7 +56,7 @@ const table = {
     // Evaluate special form such as `if` or `lambda`
     if (first.type === 'Symbol' && special.hasOwnProperty(first.name)) {
       return special[first.name](stack, scope, node);
-    // Regular funciton call
+    // Regular function call
     } else {
       const f = EVAL(stack, scope, first);
       const args = node
@@ -62,6 +78,9 @@ const table = {
       }
       throw new Error('cannot call non-function');
     }
+  },
+  JSFunction(stack, scope, node) {
+    return node;
   },
   True(stack, scope, node) {
     return node;

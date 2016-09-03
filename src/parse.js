@@ -46,7 +46,7 @@ const ANumber =
     .desc('a number');
 
 const ASymbol =
-  P.regex(/[a-zA-Z_+=<>?\/-]+/)
+  P.regex(/[a-zA-Z_+*=<>?\/-]+/)
     .map(name => ({type: 'Symbol', name}))
     .desc('a symbol');
 
