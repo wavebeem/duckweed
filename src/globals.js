@@ -9,6 +9,10 @@ function NUMBER(value) {
   return {type: 'Number', value};
 }
 
+function BOOL(value) {
+  return value ? TRUE : FALSE;
+}
+
 function print(stack, scope, x) {
   console.log(U.showSexp(x));
   return x;
@@ -27,7 +31,11 @@ function multiply(stack, scope, a, b) {
 }
 
 function lessThan(stack, scope, a, b) {
-  return a.value < b.value ? TRUE : FALSE;
+  return BOOL(a.value < b.value);
+}
+
+function equals(stack, scope, a, b) {
+  return BOOL(a.value === b.value);
 }
 
 function evaluate(stack, scope, sexp) {
@@ -40,6 +48,7 @@ const api = {
   '-': subtract,
   '*': multiply,
   '<': lessThan,
+  '=': equals,
   eval: evaluate
 };
 

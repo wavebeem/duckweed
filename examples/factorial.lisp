@@ -1,5 +1,5 @@
-(let ((f (lambda (n)
-       (if (< n 2)
+(let ((factorial (lambda (n)
+       (if (= n 0)
         1
-        (* n (f (- n 1)))))))
-  (f 4))
+        (* n (factorial (- n 1)))))))
+  (factorial 4))
