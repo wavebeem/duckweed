@@ -56,27 +56,29 @@ const table = {
     // Evaluate special form such as `if` or `lambda`
     if (first.type === 'Symbol' && special.hasOwnProperty(first.name)) {
       return special[first.name](stack, scope, node);
+    }
     // Regular function call
-    } else {
-      const f = EVAL(stack, scope, first);
-      const args = node
-        .items
-        .slice(1)
-        .map(x => EVAL(stack, scope, x));
-      if (f.type === 'JSFunction') {
-        const args2 = [stack, scope].concat(args);
-        return f.f.apply(null, args2);
-      } else if (f.type === 'Function') {
-        const newStack = stack.concat(['#<lambda>']);
-        const obj = {};
-        f.parameters.items.forEach((p, i) => {
-          obj[p.name] = args[i];
-        });
-        const newScope = Scope.create(f.scope, obj);
-        const values = f.body.map(x => EVAL(newScope, newScope, x));
-        return values[values.length - 1];
-      }
+    const f = EVAL(stack, scope, first);
+    // but first, let's make sure we're right here!
+    if (f.type !== 'JSFunction' && f.type !== 'Function') {
       throw new Error('cannot call non-function');
+    }
+    const args = node
+      .items
+      .slice(1)
+      .map(x => EVAL(stack, scope, x));
+    if (f.type === 'JSFunction') {
+      const args2 = [stack, scope].concat(args);
+      return f.f.apply(null, args2);
+    } else if (f.type === 'Function') {
+      const newStack = stack.concat(['#<lambda>']);
+      const obj = {};
+      f.parameters.items.forEach((p, i) => {
+        obj[p.name] = args[i];
+      });
+      const newScope = Scope.create(f.scope, obj);
+      const values = f.body.map(x => EVAL(newScope, newScope, x));
+      return values[values.length - 1];
     }
   },
   JSFunction(stack, scope, node) {
@@ -100,10 +102,10 @@ const table = {
 };
 
 function EVAL(stack, scope, node) {
-  if (table.hasOwnProperty(node.type)) {
-    return table[node.type](stack, scope, node);
+  if (!table.hasOwnProperty(node.type)) {
+    throw new Error('cannot evaluate ' + JSON.stringify(node));
   }
-  throw new Error('cannot evaluate ' + JSON.stringify(node));
+  return table[node.type](stack, scope, node);
 }
 
 function evaluate(scope, node) {
