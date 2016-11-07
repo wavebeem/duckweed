@@ -7,22 +7,22 @@ function create(parent, items) {
 function lookup(scope, key) {
   if (scope[0] === 'Scope.Empty') {
     throw new Error('no such variable ' + key);
-  } else if (scope[0] === 'Scope.Nonempty') {
-    if (scope[1].hasOwnProperty(key)) {
-      return scope[1][key];
-    } else {
-      return lookup(scope[2], key);
-    }
   }
-  throw new Error('not a valid scope');
+  if (scope[0] !== 'Scope.Nonempty') {
+    throw new Error('not a valid scope');
+  }
+
+  if (scope[1].hasOwnProperty(key)) {
+    return scope[1][key];
+  }
+  return lookup(scope[2], key);
 }
 
 function assign(scope, key, value) {
-  if (scope[0] === 'Scope.Nonempty') {
-    scope[1][key] = value;
-  } else {
+  if (scope[0] !== 'Scope.Nonempty') {
     throw new Error('not a valid scope to assign to');
   }
+  scope[1][key] = value;
 }
 
 exports.assign = assign;
